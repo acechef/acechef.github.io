@@ -20,25 +20,28 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.11.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
 
-    <meta name="description" content="随便写写">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Acechef&#39;s Blog">
-<meta property="og:url" content="http://example.com/index.html">
+    <meta name="description" content="简介Kubernetes中的client-go包是k8s开发者必须要了解的一块内容，我也认为这是Kubernetes代码的天花板，其中的一些设计思想和实现非常值得我们学习和借鉴。 接下来，我们来看下client-go中的workqueue包的限速器(rate_limiter)的实现。 接口在workqueue包下的default_rate_limiters.go下有好几种限速器，他们都实现了如下接">
+<meta property="og:type" content="article">
+<meta property="og:title" content="client-go的workqueue——rate-limiter">
+<meta property="og:url" content="http://example.com/2022/05/18/kubernetes-workqueue-1/index.html">
 <meta property="og:site_name" content="Acechef&#39;s Blog">
-<meta property="og:description" content="随便写写">
+<meta property="og:description" content="简介Kubernetes中的client-go包是k8s开发者必须要了解的一块内容，我也认为这是Kubernetes代码的天花板，其中的一些设计思想和实现非常值得我们学习和借鉴。 接下来，我们来看下client-go中的workqueue包的限速器(rate_limiter)的实现。 接口在workqueue包下的default_rate_limiters.go下有好几种限速器，他们都实现了如下接">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-05-18T07:21:20.000Z">
+<meta property="article:modified_time" content="2022-05-19T01:51:56.899Z">
 <meta property="article:author" content="acechef">
+<meta property="article:tag" content="kubernetes">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/2022/05/18/kubernetes-workqueue-1/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"zh-CN","comments":"","permalink":"","path":"index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2022/05/18/kubernetes-workqueue-1/","path":"2022/05/18/kubernetes-workqueue-1/","title":"client-go的workqueue——rate-limiter"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>Acechef's Blog</title>
+<title>client-go的workqueue——rate-limiter | Acechef's Blog</title>
   
 
 
@@ -65,7 +68,7 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">Acechef's Blog</h1>
+      <p class="site-title">Acechef's Blog</p>
       <i class="logo-line"></i>
     </a>
   </div>
@@ -93,7 +96,7 @@
 
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -106,6 +109,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A5%E5%8F%A3"><span class="nav-number">2.</span> <span class="nav-text">接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BucketRateLimiter"><span class="nav-number">4.</span> <span class="nav-text">BucketRateLimiter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ItemExponentialFailureRateLimiter"><span class="nav-number">5.</span> <span class="nav-text">ItemExponentialFailureRateLimiter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ItemFastSlowRateLimiter"><span class="nav-number">6.</span> <span class="nav-text">ItemFastSlowRateLimiter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MaxOfRateLimiter"><span class="nav-number">7.</span> <span class="nav-text">MaxOfRateLimiter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E8%AF%AD"><span class="nav-number">8.</span> <span class="nav-text">结语</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -151,16 +155,17 @@
 </noscript>
 
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
 
-    
+
+  
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/18/kubernetes-workqueue-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -174,13 +179,13 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | Acechef's Blog">
+      <meta itemprop="name" content="client-go的workqueue——rate-limiter | Acechef's Blog">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/05/18/kubernetes-workqueue-1/" class="post-title-link" itemprop="url">client-go的workqueue——rate-limiter</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          client-go的workqueue——rate-limiter
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -210,7 +215,7 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p><code>Kubernetes</code>中的<code>client-go</code>包是<code>k8s</code>开发者必须要了解的一块内容，我也认为这是<code>Kubernetes</code>代码的天花板，其中的一些设计思想和实现非常值得我们学习和借鉴。</p>
+        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p><code>Kubernetes</code>中的<code>client-go</code>包是<code>k8s</code>开发者必须要了解的一块内容，我也认为这是<code>Kubernetes</code>代码的天花板，其中的一些设计思想和实现非常值得我们学习和借鉴。</p>
 <p>接下来，我们来看下<code>client-go</code>中的<code>workqueue</code>包的限速器(<code>rate_limiter</code>)的实现。</p>
 <h2 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h2><p>在<code>workqueue</code>包下的<code>default_rate_limiters.go</code>下有好几种限速器，他们都实现了如下接口：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> RateLimiter <span class="keyword">interface</span> &#123;</span><br><span class="line">	<span class="comment">// When gets an item and gets to decide how long that item should wait</span></span><br><span class="line">	<span class="comment">// 根据传入的item返回要等待的时间，传入的item对象会放入到一个map中，该map键为对象item，值为int类型的计数，每调用When，都会增加一次计数</span></span><br><span class="line">	When(item <span class="keyword">interface</span>&#123;&#125;) time.Duration</span><br><span class="line">	<span class="comment">// Forget indicates that an item is finished being retried.  Doesn&#x27;t matter whether it&#x27;s for failing</span></span><br><span class="line">	<span class="comment">// or for success, we&#x27;ll stop tracking it</span></span><br><span class="line">	<span class="comment">// 清除map中的键为item的元素</span></span><br><span class="line">	Forget(item <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">	<span class="comment">// NumRequeues returns back how many failures the item has had</span></span><br><span class="line">	<span class="comment">// 获得map中键为item的数量，即返回map对应键的value</span></span><br><span class="line">	NumRequeues(item <span class="keyword">interface</span>&#123;&#125;) <span class="type">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -234,7 +239,6 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> MaxOfRateLimiter <span class="keyword">struct</span> &#123;</span><br><span class="line">	limiters []RateLimiter</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r *MaxOfRateLimiter)</span></span> When(item <span class="keyword">interface</span>&#123;&#125;) time.Duration &#123;</span><br><span class="line">	ret := time.Duration(<span class="number">0</span>)</span><br><span class="line">	<span class="keyword">for</span> _, limiter := <span class="keyword">range</span> r.limiters &#123;</span><br><span class="line">		curr := limiter.When(item)</span><br><span class="line">		<span class="keyword">if</span> curr &gt; ret &#123;</span><br><span class="line">			ret = curr</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ret</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>今天我们看了<code>workqueue</code>包中限速器的几种实现，他们主要在限速队列那边被使用，限速队列会在之后的文章提及。</p>
 
-      
     </div>
 
     
@@ -242,143 +246,25 @@
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          <div class="post-tags">
+              <a href="/tags/kubernetes/" rel="tag"># kubernetes</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/05/13/golang-token-bucket/" rel="prev" title="令牌桶算法与Golang官方包的实现">
+                  <i class="fa fa-chevron-left"></i> 令牌桶算法与Golang官方包的实现
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
     </footer>
   </article>
 </div>
 
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/13/golang-token-bucket/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="acechef">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Acechef's Blog">
-      <meta itemprop="description" content="随便写写">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | Acechef's Blog">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/05/13/golang-token-bucket/" class="post-title-link" itemprop="url">令牌桶算法与Golang官方包的实现</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-05-13 16:21:20" itemprop="dateCreated datePublished" datetime="2022-05-13T16:21:20+08:00">2022-05-13</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2022-05-17 10:23:22" itemprop="dateModified" datetime="2022-05-17T10:23:22+08:00">2022-05-17</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>什么叫令牌桶算法？它有点像疫情期间你去公园玩，为了保证在公园里的人不超过一定的数量，你得在门口大爷那取号子，拿到号子才能进去玩，没号子你就不能进去。当然这例子有点不是太准确，感兴趣的话可以看下维基百科下的解释：<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Token_bucket">https://en.wikipedia.org/wiki/Token_bucket</a></p>
-<p>下面一幅图简单解释了令牌桶的工作流程：</p>
-<p><img src="/2022/05/13/golang-token-bucket/limiter.png"></p>
-<p>为了统一，下面均将令牌称之为<code>token</code>。</p>
-<h2 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h2><p>限流。是指限制到达系统的并发请求数，当达到限制条件则可以拒绝请求，可以起到保护下游服务，防止服务过载等作用。</p>
-<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>新建限流器方法：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLimiter</span><span class="params">(r Limit, b <span class="type">int</span>)</span></span> *Limiter &#123;</span><br><span class="line">    <span class="keyword">return</span> &amp;Limiter&#123;</span><br><span class="line">        limit: r, </span><br><span class="line">		burst: b,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>实例化一个限流器:</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line">limiter := rate.NewLimiter(<span class="number">10</span>, <span class="number">50</span>)</span><br></pre></td></tr></table></figure>
-<p>上述初始化的意思是：构造了一个容量为50的的桶，并且以每秒10个<code>token</code>的速率往桶里放。</p>
-<p>此外，官方还提供了<code>Every</code>方法来设置向桶里放<code>token</code>的时间间隔：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 每100ms放一个token，也就是每秒10个</span></span><br><span class="line">limit := rate.Every(<span class="number">100</span> * time.Millisecond)</span><br><span class="line">limiter := rate.NewLimiter(limit, <span class="number">50</span>)</span><br></pre></td></tr></table></figure>
-
-<p>Limiter主要用到这几个方法：</p>
-<ul>
-<li><code>Wait(ctx context.Context) (err error)</code></li>
-<li><code>WaitN(ctx context.Context, n int) (err error)</code></li>
-<li><code>Allow() bool</code></li>
-<li><code>AllowN(now time.Time, n int) bool</code></li>
-<li><code>Reserve() *Reservation</code></li>
-<li><code>ReserveN(now time.Time, n int) *Reservation</code></li>
-</ul>
-<p>其中，<code>Wait</code>&#x2F;<code>Allow</code>&#x2F;<code>Reserve</code>分别是<code>WaitN(ctx, 1)</code>&#x2F;<code>AllowN(time.Now(), 1)</code>&#x2F;<code>ReserveN(time.Now(), 1)</code>的简化形式</p>
-<ol>
-<li><p><code>WaitN</code>方法代表当桶内的<code>token</code>数量小于N时，则等待一段时间（超时时间可以通过<code>context.withTimeout</code>设置）。如果<code>token</code>数量充足，则从桶中消费掉这N个<code>token</code>，则直接返回。</p>
-</li>
-<li><p><code>AllowN</code>方法代表截止到某一时刻，判断桶中的<code>token</code>数量至少为N个，如果满足，则从桶中消费掉这N个<code>token</code>，返回<code>true</code>；否则直接返回<code>false</code>。</p>
-</li>
-<li><p><code>ReserveN</code>方法调用完成后，会返回一个<code>*Reservation</code>对象，你可以继续使用该对象的<code>Delay</code>方法或<code>Cancel</code>方法。</p>
-</li>
-</ol>
-<p>实际使用中，可以根据不同的场景使用不同的方法。比如：<code>AllowN</code>方法可以用在频繁访问场景中，超过一定的速率则直接拒绝访问。</p>
-<p>当然你也可以动态调整限流器的速率和桶大小，使用如下方法：</p>
-<ul>
-<li><code>SetLimit(newLimit Limit)</code></li>
-<li><code>SetBurst(newBurst int)</code></li>
-</ul>
-<h2 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h2><p>官方限流器并没有通过队列来实现桶的逻辑，下面我们通过源码来看一下。</p>
-<p>限流器的定义：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Limiter <span class="keyword">struct</span> &#123;</span><br><span class="line">    mu     sync.Mutex</span><br><span class="line">    limit  Limit</span><br><span class="line">    burst  <span class="type">int</span></span><br><span class="line">    tokens <span class="type">float64</span></span><br><span class="line">    <span class="comment">// last is the last time the limiter&#x27;s tokens field was updated</span></span><br><span class="line">    last time.Time</span><br><span class="line">    <span class="comment">// lastEvent is the latest time of a rate-limited event (past or future)</span></span><br><span class="line">    lastEvent time.Time</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这里有几个字段解释一下:</p>
-<ul>
-<li><code>limit</code>：其实就是<code>float64</code>的别名。它代表<code>token</code>入桶的频率，即每秒可以塞几个<code>token</code>到桶里面。</li>
-<li><code>burst</code>:  <code>token</code>桶的大小</li>
-<li><code>tokens</code>：桶中剩余的<code>token</code>数量</li>
-<li><code>last</code>: 上一次取走<code>token</code>的时间</li>
-<li><code>lastEvent</code>: 上一次发生限流时间的时间</li>
-</ul>
-<p><code>WaitN</code>、<code>AllowN</code>、<code>ReserveN</code>这三个方法最终都调用了<code>reserveN</code>和<code>advance</code>方法，下面我们来看下这两个方法，我已将主要的注释标注上去了。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(lim *Limiter)</span></span> advance(now time.Time) (newNow time.Time, newLast time.Time, newTokens <span class="type">float64</span>) &#123;</span><br><span class="line">    <span class="comment">// 获得上一次token取走的时间</span></span><br><span class="line">    last := lim.last</span><br><span class="line">    <span class="keyword">if</span> now.Before(last) &#123;</span><br><span class="line">        last = now</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Calculate the new number of tokens, due to time that passed.</span></span><br><span class="line">    <span class="comment">// 计算出上次token和这次token的时间间隔</span></span><br><span class="line">    elapsed := now.Sub(last)</span><br><span class="line">    <span class="comment">// 计算出这段时间可以产生的新token数量(时间*频率)</span></span><br><span class="line">    delta := lim.limit.tokensFromDuration(elapsed)</span><br><span class="line">    <span class="comment">// 计算出当前可以用的tokens数(当前存在的+新产生的)</span></span><br><span class="line">    tokens := lim.tokens + delta</span><br><span class="line">    <span class="comment">// 若当前可用token数大于桶容量burst，则直接将tokens复制为burst</span></span><br><span class="line">    <span class="keyword">if</span> burst := <span class="type">float64</span>(lim.burst); tokens &gt; burst &#123;</span><br><span class="line">        tokens = burst</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 返回请求时间, 上一次token取走的时间，可用的token数</span></span><br><span class="line">    <span class="keyword">return</span> now, last, tokens</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>可以看到，<code>advance</code>方法的作用是: 计算出<strong>当一个请求进来的时刻</strong>，当前可用的<code>token</code>数量，并返回请求时间和上一次<code>token</code>取走的时间</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(lim *Limiter)</span></span> reserveN(now time.Time, n <span class="type">int</span>, maxFutureReserve time.Duration) Reservation &#123;</span><br><span class="line">    lim.mu.Lock()</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> lim.limit == Inf &#123;</span><br><span class="line">        lim.mu.Unlock()</span><br><span class="line">        <span class="keyword">return</span> Reservation&#123;</span><br><span class="line">            ok:        <span class="literal">true</span>,</span><br><span class="line">            lim:       lim,</span><br><span class="line">            tokens:    n,</span><br><span class="line">            timeToAct: now,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    now, last, tokens := lim.advance(now)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Calculate the remaining number of tokens resulting from the request.</span></span><br><span class="line">    <span class="comment">// 计算出本次请求过后剩余的token数</span></span><br><span class="line">    tokens -= <span class="type">float64</span>(n)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Calculate the wait duration</span></span><br><span class="line">    <span class="keyword">var</span> waitDuration time.Duration</span><br><span class="line">    <span class="comment">// 若token数小于0，代表token数不够，则需要计算等待时间</span></span><br><span class="line">    <span class="keyword">if</span> tokens &lt; <span class="number">0</span> &#123;</span><br><span class="line">        waitDuration = lim.limit.durationFromTokens(-tokens)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Decide result</span></span><br><span class="line">    <span class="comment">// 若一次请求的token消耗数小于等于桶容量并且等待时间小于等于最大等待时间，则ok=true</span></span><br><span class="line">    <span class="comment">// 这对应到Allow方法的返回结果</span></span><br><span class="line">    ok := n &lt;= lim.burst &amp;&amp; waitDuration &lt;= maxFutureReserve</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Prepare reservation</span></span><br><span class="line">    r := Reservation&#123;</span><br><span class="line">        ok:    ok,</span><br><span class="line">        lim:   lim,</span><br><span class="line">        limit: lim.limit,</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> ok &#123;</span><br><span class="line">        r.tokens = n</span><br><span class="line">        r.timeToAct = now.Add(waitDuration)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Update state</span></span><br><span class="line">    <span class="keyword">if</span> ok &#123;</span><br><span class="line">        <span class="comment">// 更新请求消耗token后的状态</span></span><br><span class="line">        lim.last = now</span><br><span class="line">        lim.tokens = tokens</span><br><span class="line">        lim.lastEvent = r.timeToAct</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        lim.last = last</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    lim.mu.Unlock()</span><br><span class="line">    <span class="keyword">return</span> r</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>reserveN</code>方法的作用是：判断这个请求能否获得想要数量的<code>token(n)</code>，并更新这次请求后<code>Limiter</code>实例的状态。</p>
-<p>从上面的分析可以看到，官方的限流器设计还是很精巧的，结合官方库下的测试用例看得话效果更好。(^o^)&#x2F;~</p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
 
 
 
