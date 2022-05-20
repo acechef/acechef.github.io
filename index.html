@@ -118,7 +118,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-count">4</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -152,6 +152,188 @@
 
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/19/also-read-the-bitcask-paper/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="acechef">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Acechef's Blog">
+      <meta itemprop="description" content="随便写写">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="undefined | Acechef's Blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2022/05/19/also-read-the-bitcask-paper/" class="post-title-link" itemprop="url">也读bitcask论文有感</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2022-05-19 11:57:11 / 修改时间：11:57:36" itemprop="dateCreated datePublished" datetime="2022-05-19T11:57:11+08:00">2022-05-19</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/19/kubernetes-workqueue-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="acechef">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Acechef's Blog">
+      <meta itemprop="description" content="随便写写">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="undefined | Acechef's Blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2022/05/19/kubernetes-workqueue-2/" class="post-title-link" itemprop="url">kubernetes_workqueue_2</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-05-19 10:06:09" itemprop="dateCreated datePublished" datetime="2022-05-19T10:06:09+08:00">2022-05-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-05-20 11:56:04" itemprop="dateModified" datetime="2022-05-20T11:56:04+08:00">2022-05-20</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>今天，我们来看下<code>client-go</code>中的<code>workqueue</code>包的相关队列的实现。</p>
+<p>workqueue包下主要实现了3种队列：</p>
+<ul>
+<li>Type队列</li>
+<li>延迟队列</li>
+<li>限速队列</li>
+</ul>
+<p>并且和我们常规意义上的队列做了功能的增强：</p>
+<ul>
+<li>公平有序：按照添加顺序处理元素</li>
+<li>去重：一个元素在被处理前，若添加多次，最终只会被处理一次</li>
+<li>并发：多生产者和多消费者</li>
+<li>通知与指标：有关闭通知机制，且提供<code>Metric</code>指标可与<code>Prometheus</code>对接</li>
+</ul>
+<h2 id="Type队列"><a href="#Type队列" class="headerlink" title="Type队列"></a>Type队列</h2><h3 id="Interface接口"><a href="#Interface接口" class="headerlink" title="Interface接口"></a>Interface接口</h3><p><code>Type</code>队列实现了<code>Interface</code>接口，并且延迟和限速队列(内嵌类型)也实现了这个接口</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Interface <span class="keyword">interface</span> &#123;</span><br><span class="line">    <span class="comment">// 向队列添加元素</span></span><br><span class="line">    Add(item <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">    <span class="comment">// 获得队列的长度</span></span><br><span class="line">    Len() <span class="type">int</span></span><br><span class="line">    <span class="comment">// 获得队列头部(index=0)的一个元素进行处理</span></span><br><span class="line">    Get() (item <span class="keyword">interface</span>&#123;&#125;, shutdown <span class="type">bool</span>)</span><br><span class="line">    <span class="comment">// 处理完该元素后，需要执行Done方法</span></span><br><span class="line">    Done(item <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">    <span class="comment">// 关闭队列</span></span><br><span class="line">    ShutDown()</span><br><span class="line">    <span class="comment">// 等待处理完成并关闭，之后需要调用Done()函数</span></span><br><span class="line">    ShutDownWithDrain()</span><br><span class="line">    <span class="comment">// 判断是否正在关闭</span></span><br><span class="line">    ShuttingDown() <span class="type">bool</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Type对象的数据结果"><a href="#Type对象的数据结果" class="headerlink" title="Type对象的数据结果"></a>Type对象的数据结果</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> empty <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"><span class="keyword">type</span> t <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line"><span class="keyword">type</span> set <span class="keyword">map</span>[t]empty</span><br><span class="line"></span><br><span class="line"><span class="comment">// Type is a work queue (see the package comment).</span></span><br><span class="line"><span class="keyword">type</span> Type <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// queue defines the order in which we will work on items. Every</span></span><br><span class="line">    <span class="comment">// element of queue should be in the dirty set and not in the</span></span><br><span class="line">    <span class="comment">// processing set.</span></span><br><span class="line">    queue []t</span><br><span class="line"></span><br><span class="line">    <span class="comment">// dirty defines all of the items that need to be processed.</span></span><br><span class="line">    dirty set</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Things that are currently being processed are in the processing set.</span></span><br><span class="line">    <span class="comment">// These things may be simultaneously in the dirty set. When we finish</span></span><br><span class="line">    <span class="comment">// processing something and remove it from this set, we&#x27;ll check if</span></span><br><span class="line">    <span class="comment">// it&#x27;s in the dirty set, and if so, add it to the queue.</span></span><br><span class="line">    processing set</span><br><span class="line">    </span><br><span class="line">    cond *sync.Cond</span><br><span class="line">    </span><br><span class="line">    shuttingDown <span class="type">bool</span></span><br><span class="line">    drain        <span class="type">bool</span></span><br><span class="line">    </span><br><span class="line">    metrics queueMetrics</span><br><span class="line">    </span><br><span class="line">    unfinishedWorkUpdatePeriod time.Duration</span><br><span class="line">    clock                      clock.WithTicker</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>Type</code>对象主要有3个存放队列元素的地方，分别是<code>queue</code>数组，<code>dirty map</code>，<code>processing map</code>。</p>
+<p><code>dirty map</code>用于存放需要被处理的元素，<code>processing map</code>用于存放正在被处理的元素。</p>
+<p>一个新元素进入队列，需要调用<code>Type</code>对象的<code>Add()</code>方法，此时，会将元素同时存放在<code>queue</code>数组和<code>dirty map</code>中。</p>
+<p>执行<code>Get()</code>方法后，会将元素从<code>queue</code>数组和<code>dirty map</code>删除，放入<code>processing map</code>。</p>
+<p>执行<code>Done()</code>方法后，会将元素从<code>processing map</code>中删除.</p>
+<h3 id="简单的几个例子"><a href="#简单的几个例子" class="headerlink" title="简单的几个例子"></a>简单的几个例子</h3><p>图可能会更好理解一点</p>
+<ol>
+<li>去重。添加相同元素会被舍弃(如果这个元素还没有被处理)<br><img src="/2022/05/19/kubernetes-workqueue-2/deduplication.png"></li>
+<li>处理时入队，会放入<code>dirty</code>中(图片太小可以右键在新标签页中打开)<br><img src="/2022/05/19/kubernetes-workqueue-2/reinsert.png"></li>
+</ol>
+<h2 id="延迟队列"><a href="#延迟队列" class="headerlink" title="延迟队列"></a>延迟队列</h2><h3 id="接口定义"><a href="#接口定义" class="headerlink" title="接口定义"></a>接口定义</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> DelayingInterface <span class="keyword">interface</span> &#123;</span><br><span class="line">    Interface</span><br><span class="line">    <span class="comment">// AddAfter 在等待一定时间后将元素放到 workqueue 中</span></span><br><span class="line">    <span class="comment">// 若duration &lt;= 0，代表不需要延迟，直接往队列里面添加元素；否则，构造一个waitFor的结构体，塞进初始容量为1000的waitingForAddCh channel中</span></span><br><span class="line">    AddAfter(item <span class="keyword">interface</span>&#123;&#125;, duration time.Duration)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="消费channel中的数据"><a href="#消费channel中的数据" class="headerlink" title="消费channel中的数据"></a>消费channel中的数据</h3><p>既然会往<code>waitingForAddCh</code>中生产数据，那必然有消费数据的逻辑。<code>waitingLoop</code>是延迟队列的核心。</p>
+<p>这里会有一个有序队列<code>waitForPriorityQueue</code>，会将元素进行排序，保证进入最终工作队列的元素是排好队的。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// waitingLoop runs until the workqueue is shutdown and keeps a check on the list of items to be added.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(q *delayingType)</span></span> waitingLoop() &#123;</span><br><span class="line">    <span class="keyword">defer</span> utilruntime.HandleCrash()</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Make a placeholder channel to use when there are no items in our list</span></span><br><span class="line">    never := <span class="built_in">make</span>(&lt;-<span class="keyword">chan</span> time.Time)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Make a timer that expires when the item at the head of the waiting queue is ready</span></span><br><span class="line">    <span class="keyword">var</span> nextReadyAtTimer clock.Timer</span><br><span class="line">    </span><br><span class="line">    waitingForQueue := &amp;waitForPriorityQueue&#123;&#125;</span><br><span class="line">    heap.Init(waitingForQueue)</span><br><span class="line">    </span><br><span class="line">    waitingEntryByData := <span class="keyword">map</span>[t]*waitFor&#123;&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> q.Interface.ShuttingDown() &#123;</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">    </span><br><span class="line">        now := q.clock.Now()</span><br><span class="line">    </span><br><span class="line">        <span class="comment">// Add ready entries</span></span><br><span class="line">        <span class="keyword">for</span> waitingForQueue.Len() &gt; <span class="number">0</span> &#123;</span><br><span class="line">            entry := waitingForQueue.Peek().(*waitFor)</span><br><span class="line">            <span class="keyword">if</span> entry.readyAt.After(now) &#123;</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            &#125;</span><br><span class="line">    </span><br><span class="line">            entry = heap.Pop(waitingForQueue).(*waitFor)</span><br><span class="line">            q.Add(entry.data)</span><br><span class="line">            <span class="built_in">delete</span>(waitingEntryByData, entry.data)</span><br><span class="line">        &#125;</span><br><span class="line">    </span><br><span class="line">        <span class="comment">// Set up a wait for the first item&#x27;s readyAt (if one exists)</span></span><br><span class="line">        nextReadyAt := never</span><br><span class="line">        <span class="keyword">if</span> waitingForQueue.Len() &gt; <span class="number">0</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> nextReadyAtTimer != <span class="literal">nil</span> &#123;</span><br><span class="line">                nextReadyAtTimer.Stop()</span><br><span class="line">            &#125;</span><br><span class="line">            entry := waitingForQueue.Peek().(*waitFor)</span><br><span class="line">            nextReadyAtTimer = q.clock.NewTimer(entry.readyAt.Sub(now))</span><br><span class="line">            nextReadyAt = nextReadyAtTimer.C()</span><br><span class="line">        &#125;</span><br><span class="line">    </span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> &lt;-q.stopCh:</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">    </span><br><span class="line">        <span class="keyword">case</span> &lt;-q.heartbeat.C():</span><br><span class="line">            <span class="comment">// continue the loop, which will add ready items</span></span><br><span class="line">    </span><br><span class="line">        <span class="keyword">case</span> &lt;-nextReadyAt:</span><br><span class="line">            <span class="comment">// continue the loop, which will add ready items</span></span><br><span class="line">    </span><br><span class="line">        <span class="keyword">case</span> waitEntry := &lt;-q.waitingForAddCh:</span><br><span class="line">            <span class="keyword">if</span> waitEntry.readyAt.After(q.clock.Now()) &#123;</span><br><span class="line">                insert(waitingForQueue, waitingEntryByData, waitEntry)</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                q.Add(waitEntry.data)</span><br><span class="line">            &#125;</span><br><span class="line">    </span><br><span class="line">            drained := <span class="literal">false</span></span><br><span class="line">            <span class="keyword">for</span> !drained &#123;</span><br><span class="line">                <span class="keyword">select</span> &#123;</span><br><span class="line">                <span class="keyword">case</span> waitEntry := &lt;-q.waitingForAddCh:</span><br><span class="line">                    <span class="keyword">if</span> waitEntry.readyAt.After(q.clock.Now()) &#123;</span><br><span class="line">                        insert(waitingForQueue, waitingEntryByData, waitEntry)</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        q.Add(waitEntry.data)</span><br><span class="line">                    &#125;</span><br><span class="line">                <span class="keyword">default</span>:</span><br><span class="line">                    drained = <span class="literal">true</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="限速队列"><a href="#限速队列" class="headerlink" title="限速队列"></a>限速队列</h2><p>限速队列作用当然是限速。他结合了我们上文提到的各种限速算法。我们先来看下接口定义</p>
+<h3 id="接口定义-1"><a href="#接口定义-1" class="headerlink" title="接口定义"></a>接口定义</h3><p>可以看到，它继承了延迟队列</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RateLimitingInterface is an interface that rate limits items being added to the queue.</span></span><br><span class="line"><span class="keyword">type</span> RateLimitingInterface <span class="keyword">interface</span> &#123;</span><br><span class="line">    <span class="comment">// 继承延迟队列接口</span></span><br><span class="line">    DelayingInterface</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// AddRateLimited adds an item to the workqueue after the rate limiter says it&#x27;s ok</span></span><br><span class="line">    <span class="comment">// 按照限速算法的返回时间，延迟添加到队列中</span></span><br><span class="line">    AddRateLimited(item <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Forget indicates that an item is finished being retried.  Doesn&#x27;t matter whether it&#x27;s for perm failing</span></span><br><span class="line">    <span class="comment">// or for success, we&#x27;ll stop the rate limiter from tracking it.  This only clears the `rateLimiter`, you</span></span><br><span class="line">    <span class="comment">// still have to call `Done` on the queue.</span></span><br><span class="line">    Forget(item <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// NumRequeues returns back how many times the item was requeued</span></span><br><span class="line">    <span class="comment">// 元素放入队列的次数</span></span><br><span class="line">    NumRequeues(item <span class="keyword">interface</span>&#123;&#125;) <span class="type">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><p>实现就相对比较简洁了，主要调用的是延迟队列和相关限速算法的接口</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// rateLimitingType wraps an Interface and provides rateLimited re-enquing</span></span><br><span class="line"><span class="keyword">type</span> rateLimitingType <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// 继承延迟队列</span></span><br><span class="line">    DelayingInterface</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 限速器</span></span><br><span class="line">    rateLimiter RateLimiter</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// AddRateLimited AddAfter&#x27;s the item based on the time when the rate limiter says it&#x27;s ok</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(q *rateLimitingType)</span></span> AddRateLimited(item <span class="keyword">interface</span>&#123;&#125;) &#123;</span><br><span class="line">    <span class="comment">// 按照限速算法的返回时间，延迟添加到队列中</span></span><br><span class="line">    q.DelayingInterface.AddAfter(item, q.rateLimiter.When(item))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(q *rateLimitingType)</span></span> NumRequeues(item <span class="keyword">interface</span>&#123;&#125;) <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> q.rateLimiter.NumRequeues(item)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(q *rateLimitingType)</span></span> Forget(item <span class="keyword">interface</span>&#123;&#125;) &#123;</span><br><span class="line">    q.rateLimiter.Forget(item)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
